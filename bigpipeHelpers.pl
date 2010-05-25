@@ -97,7 +97,6 @@ sub createPool {
   my ($name, $port, $monitor, @nodes) = @_;
   my ($poolInfo);
 
-  dieIfDoesntExist("node $node");
   dieIfExists("pool $name");
 
   $poolInfo = "pool $name {";
@@ -105,6 +104,7 @@ sub createPool {
     $poolInfo .= " monitor all $monitor";
   }
   foreach $node (@nodes) {
+    #dieIfDoesntExist("node $node");
     $poolInfo .= " member $node:$port";
   }
   $poolInfo .= " }";
@@ -250,6 +250,29 @@ sub saveClassFromHash {
   $class .= " }";
 
   checkedSyscall("$bigpipe class $class");
+}
+
+# Loads an iRule from a file
+#
+# loadRuleFromFile(name, file)
+#   name - The name to use for the rule
+#   file - The name of the file to load the rule from
+sub loadRuleFromFile {
+  my ($rulename, $filename) = @_;
+  open (RULE, $filename) or die "Can't open file $filename";
+  my $ruleContents = do { local $/; <RULE> };
+  close (RULE);
+  $ruleContents = escapeForSyscall($ruleContents);
+  checkedSyscall("$bigpipe rule $rulename \"{ $ruleContents }\"");
+}
+
+sub escapeForSyscall {
+  my ($escaped) = @_;
+  $escaped =~ s/\\/\\\\/g;
+  $escaped =~ s/"/\\"/g;
+  $escaped =~ s/'/\\'/g;
+  $escaped =~ s/\$/\\\$/g;
+  return $escaped;
 }
 
 1;
