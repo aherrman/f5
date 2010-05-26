@@ -92,9 +92,10 @@ sub createNode {
 #   name - The name to give the pool
 #   port - The port the pool members should be configured with
 #   monitor - The health monitor to assign.
+#   lbmethod - The load balancing method to use
 #   nodes - Array containing the members to add to the pool ("node:port")
 sub createPool {
-  my ($name, $port, $monitor, @nodes) = @_;
+  my ($name, $port, $monitor, $lbmethod, @nodes) = @_;
   my ($poolInfo);
 
   dieIfExists("pool $name");
@@ -102,6 +103,9 @@ sub createPool {
   $poolInfo = "pool $name {";
   if($monitor) {
     $poolInfo .= " monitor all $monitor";
+  }
+  if($lbmethod) {
+    $poolInfo .= " lb method $lbmethod";
   }
   foreach $node (@nodes) {
     #dieIfDoesntExist("node $node");
